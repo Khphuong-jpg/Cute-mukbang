@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>Cute Mukbang World</title>
+<style>
+:root{--bg:#ffeef5;--bg2:#ffd9ea;--card:#fff;--ink:#5a3550;--pink:#ff7eb6;--mint:#7fe0c3;--gold:#ffc94d;--sh:0 6px 0 rgba(255,126,182,.35)}
+[data-dark]{--bg:#2a1f3d;--bg2:#3a2b55;--card:#41335f;--ink:#ffe9f5;--sh:0 6px 0 rgba(0,0,0,.35)}
+[data-contrast]{--ink:#000;--card:#fff;--bg:#fff;--bg2:#eee}
+[data-dark][data-contrast]{--ink:#fff;--card:#000;--bg:#000;--bg2:#111}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
+html,body{margin:0;height:100%;overflow:hidden;font-family:"Baloo 2","Nunito","Trebuchet MS",system-ui,sans-serif;color:var(--ink);background:var(--bg)}
+button{font:inherit;color:inherit;border:0;cursor:pointer}
+#app{position:fixed;inset:0;display:flex;flex-direction:column;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom);background:radial-gradient(circle at 20% 0,var(--bg2),var(--bg) 60%)}
+.reduce *{animation-duration:.01s!important;transition:none!important}
+.big-text{font-size:1.15em}
+/* loading */
+#load{position:fixed;inset:0;z-index:50;background:linear-gradient(160deg,#ffb3d4,#ffe0b3);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;transition:opacity .5s}
+#load .logo{font-size:clamp(34px,10vw,58px);font-weight:800;color:#fff;text-align:center;line-height:1;text-shadow:0 5px 0 #ff7eb6,0 10px 18px rgba(0,0,0,.15);animation:pop 1s ease-out}
+#load .bar{width:60%;max-width:260px;height:16px;border-radius:99px;background:#fff8;overflow:hidden}
+#load .bar i{display:block;height:100%;width:0;background:var(--pink);border-radius:99px;animation:fill 1.6s ease-out forwards}
+#load svg{width:110px;animation:bob 1s ease-in-out infinite}
+@keyframes fill{to{width:100%}}@keyframes pop{0%{transform:scale(.3);opacity:0}70%{transform:scale(1.12)}100%{transform:scale(1);opacity:1}}
+@keyframes bob{50%{transform:translateY(-10px) rotate(4deg)}}
+/* hud */
+#hud{display:flex;gap:8px;align-items:center;padding:10px 12px}
+.chip{background:var(--card);border-radius:99px;padding:5px 12px;font-weight:700;box-shadow:var(--sh);white-space:nowrap}
+.lv{flex:1;min-width:0}
+.lv .t{height:12px;border-radius:99px;background:var(--bg2);overflow:hidden;margin-top:3px}
+.lv .t i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--mint),var(--pink));transition:width .4s}
+#stage{flex:1;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;min-height:0;transition:transform .12s}
+#char{width:min(46vw,190px);margin-bottom:-26px;z-index:2;animation:idle 2.4s ease-in-out infinite}
+#char.eat{animation:chew .28s ease-in-out infinite}
+#char.happy{animation:hop .5s ease-out}
+@keyframes idle{50%{transform:translateY(-5px) scale(1.02)}}
+@keyframes chew{50%{transform:scale(1.05,.95)}}
+@keyframes hop{40%{transform:translateY(-24px) rotate(-4deg)}}
+.eyes circle{transform-box:fill-box;transform-origin:center;animation:blink 4s infinite}
+@keyframes blink{0%,94%,100%{transform:scaleY(1)}97%{transform:scaleY(.1)}}
+#mouth{transform-box:fill-box;transform-origin:center;transition:transform .12s}
+.eat #mouth{animation:mouth .28s infinite}
+@keyframes mouth{50%{transform:scale(1.4,.5)}}
+#table{width:100%;height:32%;min-height:120px;background:linear-gradient(#ffd6a5,#f2a97c);border-radius:40px 40px 0 0;position:relative;box-shadow:inset 0 8px 0 #fff5;display:flex;justify-content:center}
+#plate{position:absolute;top:-70px;width:min(52vw,200px);cursor:pointer;z-index:3;filter:drop-shadow(0 10px 6px rgba(0,0,0,.18))}
+#plate svg{width:100%;display:block;animation:sway 3s ease-in-out infinite}
+#plate.squash svg{animation:squash .18s}
+#plate.wob svg{animation:wob .6s}
+@keyframes sway{50%{transform:translateY(-4px)}}@keyframes squash{50%{transform:scale(1.12,.86)}}
+@keyframes wob{25%{transform:rotate(-6deg) scaleY(1.06)}75%{transform:rotate(6deg) scaleY(.94)}}
+#info{position:absolute;bottom:106px;left:0;right:0;text-align:center;font-weight:800;font-size:1.15em;z-index:4;text-shadow:0 2px 0 #fff8;color:#5a3550}
+#eatbtn{position:absolute;bottom:34px;left:50%;transform:translateX(-50%);z-index:5;background:var(--pink);color:#fff;font-weight:800;font-size:1.3em;padding:12px 40px;border-radius:99px;box-shadow:0 7px 0 #d94f8f;transition:transform .08s}
+#eatbtn:active{transform:translateX(-50%) translateY(5px);box-shadow:0 2px 0 #d94f8f}
+#tray{display:flex;gap:8px;overflow-x:auto;padding:10px 12px;background:var(--card);scrollbar-width:none}
+#tray::-webkit-scrollbar{display:none}
+.slot{flex:0 0 62px;height:62px;border-radius:18px;background:var(--bg);padding:4px;border:3px solid transparent;transition:transform .1s}
+.slot.on{border-color:var(--pink);transform:translateY(-4px)}
+.slot svg{width:100%;height:100%}
+#nav{display:flex;justify-content:space-around;padding:8px 6px;background:var(--card);gap:4px}
+#nav button{background:var(--bg);border-radius:14px;padding:8px 10px;font-weight:700;font-size:.85em;flex:1;box-shadow:0 3px 0 var(--bg2);transition:transform .08s}
+#nav button:active,.btn:active{transform:scale(.92)}
+#fx{position:fixed;inset:0;pointer-events:none;z-index:20}
+#toast{position:fixed;top:78px;left:50%;transform:translate(-50%,-30px);opacity:0;z-index:40;background:var(--gold);color:#5a3550;font-weight:800;padding:10px 22px;border-radius:99px;box-shadow:0 5px 0 #d9a020;transition:.3s;text-align:center;pointer-events:none}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+#combo{position:absolute;top:8px;font-size:2em;font-weight:800;color:var(--pink);text-shadow:0 3px 0 #fff;opacity:0;z-index:6;pointer-events:none}
+#combo.go{animation:cb 1s ease-out}
+@keyframes cb{0%{opacity:0;transform:scale(.4)}25%{opacity:1;transform:scale(1.3)}100%{opacity:0;transform:translateY(-26px) scale(1)}}
+/* panels */
+.panel{position:fixed;inset:0;z-index:30;background:#0006;display:flex;align-items:flex-end;justify-content:center}
+.panel[hidden]{display:none}
+.box{background:var(--bg);width:100%;max-width:560px;max-height:88%;overflow:auto;border-radius:28px 28px 0 0;padding:18px;animation:up .28s ease-out;position:relative}
+@keyframes up{from{transform:translateY(60px);opacity:0}}
+.box h2{margin:0 0 12px}
+.x{position:absolute;right:14px;top:14px;background:var(--card);width:36px;height:36px;border-radius:50%;font-weight:800}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:10px}
+.card{background:var(--card);border-radius:18px;padding:8px;text-align:center;font-size:.78em;font-weight:700;box-shadow:var(--sh)}
+.card svg{width:100%;height:70px}
+.card.lock svg{filter:brightness(0) opacity(.22)}
+.btn{background:var(--pink);color:#fff;border-radius:99px;padding:6px 12px;font-weight:800;margin-top:4px;transition:transform .08s}
+.btn.g{background:var(--mint);color:#245}.btn[disabled]{opacity:.4}
+.rar{font-size:.72em;opacity:.8}
+.row{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 0;border-bottom:2px dashed var(--bg2)}
+input[type=range]{width:100%;accent-color:var(--pink)}
+#menu{position:fixed;inset:0;z-index:25;background:linear-gradient(170deg,#ffc2dd,#fff0c9 70%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:20px}
+#menu[hidden]{display:none}
+#menu h1{margin:0;font-size:clamp(34px,10vw,56px);line-height:.95;text-align:center;color:#fff;text-shadow:0 5px 0 #ff7eb6,0 10px 16px #0002}
+#menu .big{background:#fff;color:#ff5fa3;font-size:1.6em;font-weight:800;padding:14px 60px;border-radius:99px;box-shadow:0 8px 0 #ffb0d2;animation:pulse 1.4s infinite}
+@keyframes pulse{50%{transform:scale(1.06)}}
+#menu .sm{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+#menu .sm button{background:#fff9;border-radius:99px;padding:8px 16px;font-weight:700;color:#5a3550}
+#asmr{position:absolute;left:0;right:0;top:44%;display:none;justify-content:center;gap:8px;z-index:6}
+.asmr #hud,.asmr #tray,.asmr #nav,.asmr #eatbtn,.asmr #info{display:none}
+.asmr #asmr{display:flex}
+#asmr button{background:var(--card);border-radius:99px;padding:8px 14px;font-weight:800;box-shadow:var(--sh)}
+</style>
+</head>
+<body>
+<div id="load">
+  <svg viewBox="0 0 120 120"><g id="ldfood"></g></svg>
+  <div class="logo">CUTE<br>MUKBANG<br>WORLD</div>
+  <div class="bar"><i></i></div>
+</div>
+
+<div id="menu" hidden>
+  <h1>CUTE<br>MUKBANG<br>WORLD</h1>
+  <button class="big" id="mPlay">Chơi ngay</button>
+  <div class="sm">
+    <button data-p="shop">Cửa hàng</button><button data-p="col">Bộ sưu tập</button>
+    <button data-p="quest">Nhiệm vụ</button><button data-p="stats">Thống kê</button>
+    <button data-p="set">Cài đặt</button>
+  </div>
+</div>
+
+<div id="app">
+  <div id="hud">
+    <div class="chip">Lv <b id="lv">1</b></div>
+    <div class="lv"><small id="xpt"></small><div class="t"><i id="xpb"></i></div></div>
+    <div class="chip">Xu <b id="coins">0</b></div>
+    <div class="chip">Gem <b id="gems">0</b></div>
+  </div>
+  <div id="stage">
+    <div id="combo"></div>
+    <div id="asmr">
+      <button data-a="crunch">Giòn</button><button data-a="soft">Mềm</button>
+      <button data-a="slurp">Húp</button><button data-a="drink">Uống</button><button data-a="rand">Ngẫu nhiên</button>
+    </div>
+    <svg id="char" viewBox="0 0 120 120">
+      <ellipse cx="60" cy="52" rx="46" ry="46" fill="#5b3a4a"/>
+      <circle cx="60" cy="62" r="38" fill="#ffe1cf"/>
+      <path d="M20 58Q30 14 62 16Q94 14 100 58Q84 34 60 36Q36 34 20 58Z" fill="#5b3a4a"/>
+      <circle cx="90" cy="26" r="9" fill="#ff7eb6"/><circle cx="90" cy="26" r="4" fill="#fff"/>
+      <g class="eyes"><circle cx="44" cy="64" r="6" fill="#3b2233"/><circle cx="76" cy="64" r="6" fill="#3b2233"/>
+      <circle cx="46" cy="62" r="2" fill="#fff"/><circle cx="78" cy="62" r="2" fill="#fff"/></g>
+      <circle cx="34" cy="76" r="7" fill="#ff9bb8" opacity=".6"/><circle cx="86" cy="76" r="7" fill="#ff9bb8" opacity=".6"/>
+      <ellipse id="mouth" cx="60" cy="80" rx="7" ry="5" fill="#c2405f"/>
+      <rect x="30" y="98" width="60" height="30" rx="14" fill="#7fc8f8"/>
+    </svg>
+    <div id="table">
+      <div id="plate"></div>
+    </div>
+    <div id="info"></div>
+    <button id="eatbtn">ĂN!</button>
+  </div>
+  <div id="tray"></div>
+  <div id="nav">
+    <button data-p="shop">Shop</button><button data-p="col">Sách</button><button data-p="quest">Nhiệm vụ</button>
+    <button id="bAsmr">ASMR</button><button id="bShot">Chụp</button><button data-p="set">Cài đặt</button>
+  </div>
+</div>
+
+<canvas id="fx"></canvas>
+<div id="toast"></div>
+<div class="panel" id="panel" hidden><div class="box"><button class="x" id="px">X</button><h2 id="pt"></h2><div id="pb"></div></div></div>
+
+<script>
+"use strict";
+/* ============ DỮ LIỆU MÓN ĂN (110 món, 11 kiểu hình) ============ */
+const GROUPS={
+bowl:"Ramen,Tonkotsu ramen,Mì cay,Mì bò,Mì trứng,Mì xào,Mì phô mai,Udon,Soba,Yakisoba,Cơm chiên,Cơm bò,Cơm gà,Cơm cà ri,Cơm kimchi,Tokbokki",
+roll:"Sushi,Salmon sushi,Tuna sushi,California roll,Kimbap,Dango,Mochi",
+wing:"Gà rán,Gà sốt cay,Gà sốt mật ong,Chicken wings,Steak,Sausage,Corn dog,Xiên que,Hotdog",
+burger:"Hamburger,Cheeseburger,Sandwich,Taco,Burrito,Bánh bao,Dumpling,Há cảo,Okonomiyaki",
+pizza:"Pizza,Pizza phô mai,Pizza pepperoni,Nachos,Waffle,Pancake,Crepe,Tempura,Fish and chips,Khoai tây chiên,Khoai lang chiên",
+round:"Meatball,Fried rice ball,Takoyaki,Donut,Macaron,Cookie,Churros,Marshmallow,Cotton candy,Jelly,Pudding,Flan",
+cake:"Bánh kem,Strawberry cake,Chocolate cake,Cheesecake,Tiramisu,Brownie,Fruit tart,Chocolate bar,Bingsu",
+cone:"Kem vanilla,Kem chocolate,Kem strawberry,Kem matcha,Kem mint,Kem cookie,Sundae",
+fruit:"Dâu,Xoài,Dưa hấu,Nho,Cam,Táo,Kiwi,Chuối,Đào,Cherry,Việt quất,Dứa,Thanh long,Măng cụt,Sầu riêng",
+cup:"Trà sữa,Trà đào,Trà chanh,Matcha latte,Chocolate milk,Strawberry milk,Soda,Cola,Lemonade,Smoothie,Mango smoothie,Strawberry smoothie,Coffee,Iced coffee,Hot chocolate"};
+const SND={bowl:"slurp",cup:"drink",wing:"crunch",pizza:"crunch",fruit:"crunch",burger:"crunch",round:"soft",cake:"soft",cone:"soft",roll:"soft"};
+const RAR=["Common","Common","Common","Rare","Rare","Epic","Legendary"];
+const FOODS=[];
+Object.entries(GROUPS).forEach(([t,s])=>s.split(",").forEach(n=>{
+  let h=0;for(const c of n)h=(h*31+c.charCodeAt(0))>>>0;
+  const i=FOODS.length;
+  FOODS.push({n,t,h:h%360,r:RAR[h%7],price:i<6?0:60+(i*7%15)*30,xp:8+(h%7)*3,cal:80+h%420,snd:SND[t]});
+}));
+// đưa 6 món miễn phí đa dạng lên đầu
+const start=["Ramen","Pizza","Hamburger","Kem vanilla","Dâu","Trà sữa"];
+FOODS.sort((a,b)=>(start.indexOf(b.n)+1>0)-(start.indexOf(a.n)+1>0)||0);
+FOODS.forEach((f,i)=>f.price=i<6?0:60+(i*7%15)*30);
+
+const col=(h,s,l)=>`hsl(${h},${s}%,${l}%)`;
+const SHAPES={
+bowl:(a,b,c)=>`<path d="M14 56Q60 130 106 56Z" fill="#fff" stroke="${b}" stroke-width="3"/><ellipse cx="60" cy="56" rx="46" ry="13" fill="${a}"/><path d="M30 54q10-12 20 0t20 0 20 0M36 60q8-9 16 0t16 0 16 0" stroke="${c}" stroke-width="5" fill="none" stroke-linecap="round"/><circle cx="46" cy="52" r="8" fill="#fff"/><circle cx="46" cy="52" r="4" fill="#ffc94d"/><circle cx="78" cy="55" r="6" fill="${b}"/><path d="M40 34q-6-10 0-18M60 32q-6-10 0-20M80 34q-6-10 0-18" stroke="#fff" stroke-width="3" fill="none" opacity=".7" stroke-linecap="round"/>`,
+roll:(a,b,c)=>`<rect x="20" y="52" width="80" height="44" rx="22" fill="#fff" stroke="#e8dede" stroke-width="2"/><rect x="34" y="52" width="52" height="44" fill="#3b4a45"/><ellipse cx="60" cy="52" rx="34" ry="12" fill="${a}"/><ellipse cx="52" cy="50" rx="18" ry="5" fill="${c}" opacity=".6"/><circle cx="60" cy="74" r="10" fill="${b}"/>`,
+wing:(a,b,c)=>`<g transform="rotate(-30 60 60)"><rect x="76" y="52" width="34" height="12" rx="6" fill="#fff5e6"/><circle cx="110" cy="53" r="7" fill="#fff5e6"/><circle cx="110" cy="63" r="7" fill="#fff5e6"/><ellipse cx="48" cy="58" rx="42" ry="30" fill="${a}"/><ellipse cx="48" cy="58" rx="42" ry="30" fill="none" stroke="${b}" stroke-width="4"/><circle cx="30" cy="48" r="4" fill="${b}"/><circle cx="52" cy="40" r="3" fill="${b}"/><circle cx="60" cy="66" r="4" fill="${b}"/><ellipse cx="34" cy="44" rx="14" ry="6" fill="#fff" opacity=".35"/></g>`,
+burger:(a,b,c)=>`<path d="M14 54Q14 14 60 14T106 54Z" fill="${a}"/><circle cx="40" cy="30" r="2.5" fill="#fff5cc"/><circle cx="62" cy="24" r="2.5" fill="#fff5cc"/><circle cx="82" cy="32" r="2.5" fill="#fff5cc"/><path d="M10 56q10 10 20 0t20 0 20 0 20 0 20 0v6H10Z" fill="#7bd66f"/><rect x="14" y="62" width="92" height="16" rx="8" fill="#7a4632"/><path d="M14 78h92l-6 12H20Z" fill="${c}"/><path d="M14 90h92q0 16-46 16T14 90Z" fill="${a}"/>`,
+pizza:(a,b,c)=>`<path d="M60 112L12 30Q60 4 108 30Z" fill="${c}"/><path d="M60 100L22 34Q60 16 98 34Z" fill="${a}"/><path d="M12 30Q60 4 108 30" stroke="#e0a25c" stroke-width="10" fill="none" stroke-linecap="round"/><circle cx="46" cy="42" r="8" fill="${b}"/><circle cx="72" cy="50" r="8" fill="${b}"/><circle cx="58" cy="70" r="7" fill="${b}"/><path d="M52 104q-4 8 0 12M64 100q4 10 0 16" stroke="${a}" stroke-width="5" fill="none" stroke-linecap="round"/>`,
+round:(a,b,c)=>`<circle cx="60" cy="62" r="46" fill="${a}"/><path d="M20 56Q24 22 60 20T100 56Q90 44 78 56T56 52 36 60 20 56Z" fill="${b}"/><circle cx="60" cy="62" r="12" fill="#fff5e6" opacity=".9"/><rect x="36" y="34" width="8" height="3" rx="1.5" fill="#fff" transform="rotate(30 40 35)"/><rect x="70" y="32" width="8" height="3" rx="1.5" fill="${c}" transform="rotate(-20 74 33)"/><rect x="84" y="50" width="8" height="3" rx="1.5" fill="#fff"/><ellipse cx="42" cy="44" rx="12" ry="6" fill="#fff" opacity=".4"/>`,
+cake:(a,b,c)=>`<rect x="18" y="52" width="84" height="46" rx="12" fill="${a}"/><rect x="18" y="72" width="84" height="8" fill="${b}"/><path d="M18 60Q18 42 60 42T102 60q-8 12-16 0t-16 0-16 0-16 0-16 0Z" fill="${c}"/><circle cx="60" cy="38" r="8" fill="#e02f5b"/><path d="M60 30q4-10 12-10" stroke="#3c9a4a" stroke-width="3" fill="none"/><ellipse cx="46" cy="66" rx="14" ry="4" fill="#fff" opacity=".35"/>`,
+cone:(a,b,c)=>`<path d="M32 66L60 116L88 66Z" fill="#e8b36c"/><path d="M44 74l22 30M58 70l14 24M72 68l-30 24" stroke="#c98d45" stroke-width="2"/><circle cx="60" cy="56" r="28" fill="${a}"/><path d="M34 60q8 12 16 0t16 2 16-2" fill="${a}" stroke="${b}" stroke-width="3"/><circle cx="60" cy="30" r="20" fill="${c}"/><circle cx="60" cy="14" r="6" fill="#e02f5b"/><ellipse cx="50" cy="26" rx="8" ry="4" fill="#fff" opacity=".5"/>`,
+fruit:(a,b,c)=>`<path d="M60 26C20 20 12 70 32 96Q60 116 88 96C108 70 100 20 60 26Z" fill="${a}"/><path d="M60 26q-16-16-30-8 12 10 30 8Zm0 0q16-16 30-8-12 10-30 8Z" fill="#59c26a"/><ellipse cx="42" cy="54" rx="9" ry="14" fill="#fff" opacity=".4" transform="rotate(20 42 54)"/><circle cx="70" cy="66" r="2.5" fill="${b}"/><circle cx="56" cy="78" r="2.5" fill="${b}"/><circle cx="76" cy="84" r="2.5" fill="${b}"/><circle cx="48" cy="90" r="2.5" fill="${b}"/>`,
+cup:(a,b,c)=>`<path d="M60 22L84 4" stroke="${b}" stroke-width="7" stroke-linecap="round"/><path d="M28 24H92L84 110Q60 118 36 110Z" fill="#ffffffaa" stroke="${c}" stroke-width="3"/><path d="M31 46H89L82 108Q60 115 38 108Z" fill="${a}"/><rect x="26" y="18" width="68" height="10" rx="5" fill="${c}"/><rect x="44" y="52" width="16" height="16" rx="4" fill="#fff" opacity=".55" transform="rotate(14 52 60)"/><rect x="64" y="66" width="14" height="14" rx="4" fill="#fff" opacity=".55" transform="rotate(-10 70 72)"/><circle cx="46" cy="96" r="5" fill="#4a3040"/><circle cx="60" cy="98" r="5" fill="#4a3040"/><circle cx="72" cy="95" r="5" fill="#4a3040"/><path d="M38 52v40" stroke="#fff" stroke-width="4" stroke-linecap="round" opacity=".5"/>`
+};
+const BITES=[[104,28,26],[14,38,28],[102,84,30],[16,88,30],[60,14,34],[60,64,90]];
+let uid=0;
+function foodSVG(i,b=0){
+  const f=FOODS[i],id="m"+(uid++);
+  const a=col(f.h,75,68),bb=col((f.h+40)%360,70,52),c=col((f.h+180)%360,65,82);
+  const holes=BITES.slice(0,b).map(x=>`<circle cx="${x[0]}" cy="${x[1]}" r="${x[2]}" fill="#000"/>`).join("");
+  return `<svg viewBox="0 0 120 120"><defs><mask id="${id}"><rect width="120" height="120" fill="#fff"/>${holes}</mask></defs><g mask="url(#${id})">${SHAPES[f.t](a,bb,c)}</g></svg>`;
+}
+
+/* ============ SAVE ============ */
+const KEY="cute-mukbang-v1";
+const def={coins:120,gems:5,xp:0,lvl:1,owned:[0,1,2,3,4,5],eaten:0,bites:0,best:0,hist:{},sfx:.8,mute:0,dark:0,reduce:0,big:0,contrast:0,vib:1,seen:0,day:"",q:{eat:0,combo:0,earn:0,claim:[]},ach:[]};
+let S;try{S=Object.assign({},def,JSON.parse(localStorage.getItem(KEY)||"{}"))}catch(e){S={...def}}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+const today=new Date().toDateString();
+if(S.day!==today){S.day=today;S.q={eat:0,combo:0,earn:0,claim:[]};S.coins+=30}
+
+/* ============ ÂM THANH (Web Audio, tự tạo) ============ */
+let AC,NB;
+function ac(){if(!AC){AC=new(window.AudioContext||window.webkitAudioContext)();NB=AC.createBuffer(1,AC.sampleRate,AC.sampleRate);const d=NB.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1}
+  if(AC.state==="suspended")AC.resume();return AC}
+const vol=()=>S.mute?0:S.sfx;
+function noise(t,dur,f,q,g,type="bandpass"){
+  const s=AC.createBufferSource();s.buffer=NB;s.playbackRate.value=.8+Math.random()*.4;
+  const fl=AC.createBiquadFilter();fl.type=type;fl.frequency.value=f;fl.Q.value=q;
+  const gn=AC.createGain();gn.gain.setValueAtTime(0,t);gn.gain.linearRampToValueAtTime(g*vol(),t+.005);gn.gain.exponentialRampToValueAtTime(.0001,t+dur);
+  s.connect(fl).connect(gn).connect(AC.destination);s.start(t,Math.random()*.5,dur+.05);
+}
+function tone(t,f1,f2,dur,g){
+  const o=AC.createOscillator(),gn=AC.createGain();o.type="sine";
+  o.frequency.setValueAtTime(f1,t);o.frequency.exponentialRampToValueAtTime(f2,t+dur);
+  gn.gain.setValueAtTime(0,t);gn.gain.linearRampToValueAtTime(g*vol(),t+.03);gn.gain.exponentialRampToValueAtTime(.0001,t+dur);
+  o.connect(gn).connect(AC.destination);o.start(t);o.stop(t+dur+.05);
+}
+const R=(a,b)=>a+Math.random()*(b-a);
+const SFX={
+  crunch(){const t=ac().currentTime,n=3+(Math.random()*3|0);for(let k=0;k<n;k++)noise(t+k*R(.02,.045),R(.03,.06),R(1800,4200),R(.8,1.6),R(.5,.9));noise(t,.09,300,.7,.5,"lowpass")},
+  soft(){const t=ac().currentTime;noise(t,R(.1,.18),R(400,800),.6,.6);noise(t+.12,.08,R(300,500),.6,.4,"lowpass")},
+  slurp(){const t=ac().currentTime;tone(t,R(260,340),R(800,1100),R(.4,.6),.18);noise(t,.5,R(1500,2500),2,.25)},
+  drink(){const t=ac().currentTime;for(let k=0;k<2;k++){tone(t+k*.2,R(220,260),R(110,140),.16,.4);noise(t+k*.2,.12,900,1,.15)}noise(t+.45,.06,4500,3,.25)},
+  swallow(){const t=ac().currentTime;tone(t,R(170,210),R(70,90),.18,.5)},
+  chew(){const t=ac().currentTime;noise(t,.07,R(350,600),.8,.4)},
+  ding(){const t=ac().currentTime;tone(t,880,1320,.25,.25);tone(t+.1,1320,1760,.3,.2)}
+};
+function eatSound(kind,last){
+  SFX[kind]();
+  setTimeout(()=>SFX.chew(),140);
+  if(last)setTimeout(()=>SFX.swallow(),380);
+}
+
+/* ============ PARTICLES (canvas, chỉ chạy khi có hạt) ============ */
+const cv=document.getElementById("fx"),cx=cv.getContext("2d");let P=[],raf=0;
+function rs(){cv.width=innerWidth*Math.min(devicePixelRatio,2);cv.height=innerHeight*Math.min(devicePixelRatio,2);cx.setTransform(cv.width/innerWidth,0,0,cv.height/innerHeight,0,0)}
+rs();addEventListener("resize",rs);
+function burst(x,y,n,colors,kind="crumb"){
+  if(S.reduce)n=Math.ceil(n/4);
+  for(let i=0;i<n&&P.length<260;i++)P.push({x,y,vx:R(-4,4),vy:R(-7,-1),l:1,c:colors[i%colors.length],r:R(2,6),k:kind});
+  if(!raf)raf=requestAnimationFrame(tick);
+}
+function tick(){
+  cx.clearRect(0,0,innerWidth,innerHeight);
+  P=P.filter(p=>p.l>0);
+  for(const p of P){p.x+=p.vx;p.y+=p.vy;p.vy+=.35;p.l-=.02;cx.globalAlpha=Math.max(p.l,0);cx.fillStyle=p.c;
+    if(p.k==="star"){cx.beginPath();cx.arc(p.x,p.y,p.r*.7,0,7);cx.fill();cx.fillRect(p.x-p.r*1.6,p.y-1,p.r*3.2,2);cx.fillRect(p.x-1,p.y-p.r*1.6,2,p.r*3.2)}
+    else if(p.k==="heart"){cx.beginPath();cx.arc(p.x-p.r/2,p.y,p.r,0,7);cx.arc(p.x+p.r/2,p.y,p.r,0,7);cx.fill()}
+    else cx.fillRect(p.x,p.y,p.r,p.r)}
+  cx.globalAlpha=1;
+  raf=P.length?requestAnimationFrame(tick):0;if(!raf)cx.clearRect(0,0,innerWidth,innerHeight);
+}
+
+/* ============ TIỆN ÍCH UI ============ */
+const $=s=>document.querySelector(s);
+function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove("show"),1800)}
+function vib(n){if(S.vib&&navigator.vibrate)navigator.vibrate(n)}
+function shake(a){if(S.reduce)return;const s=$("#stage");s.style.transform=`translate(${R(-a,a)}px,${R(-a,a)}px) scale(1.02)`;setTimeout(()=>s.style.transform="",110)}
+const need=l=>80+l*40;
+function hud(){
+  $("#lv").textContent=S.lvl;$("#coins").textContent=S.coins;$("#gems").textContent=S.gems;
+  $("#xpt").textContent=`${S.xp}/${need(S.lvl)} XP`;$("#xpb").style.width=Math.min(100,S.xp/need(S.lvl)*100)+"%";
+}
+function apply(){
+  document.body.toggleAttribute("data-dark",!!S.dark);document.documentElement.toggleAttribute("data-dark",!!S.dark);
+  document.documentElement.toggleAttribute("data-contrast",!!S.contrast);
+  document.body.classList.toggle("reduce",!!S.reduce);document.body.classList.toggle("big-text",!!S.big);
+}
+function addXP(n){
+  S.xp+=n;
+  while(S.xp>=need(S.lvl)){S.xp-=need(S.lvl);S.lvl++;S.gems+=2;S.coins+=50;SFX.ding();toast(`LEVEL UP! Lv ${S.lvl}  +50 xu +2 gem`);burst(innerWidth/2,innerHeight/3,50,["#ffc94d","#ff7eb6","#7fe0c3","#fff"],"star")}
+}
+
+/* ============ GAMEPLAY ============ */
+let cur=0,bites=0,combo=0,lastEat=0,busy=0;
+function renderPlate(){
+  $("#plate").innerHTML=foodSVG(S.owned[cur],bites);
+  const f=FOODS[S.owned[cur]];
+  $("#info").textContent=`${f.n} - ${f.r}`;
+}
+function renderTray(){
+  const tr=$("#tray");tr.innerHTML="";
+  S.owned.forEach((id,i)=>{const b=document.createElement("button");b.className="slot"+(i===cur?" on":"");b.innerHTML=foodSVG(id);b.title=FOODS[id].n;
+    b.onclick=()=>{if(busy)return;ac();cur=i;bites=0;renderPlate();renderTray();SFX.soft()};tr.appendChild(b)});
+}
+function setFace(c){const el=$("#char");el.classList.remove("eat","happy");void el.offsetWidth;if(c)el.classList.add(c)}
+function bite(){
+  if(busy)return;ac();
+  const id=S.owned[cur],f=FOODS[id];
+  bites++;S.bites++;
+  const last=bites>=6;
+  eatSound(f.snd,last);vib(last?[30,40,30]:15);
+  const pl=$("#plate");pl.classList.remove("squash","wob");void pl.offsetWidth;pl.classList.add(f.t==="round"||f.t==="cone"||f.snd==="drink"?"wob":"squash");
+  const r=pl.getBoundingClientRect();
+  const cs=[col(f.h,70,70),col(f.h,60,50),"#f2cf9b"];
+  burst(r.left+r.width/2,r.top+r.height/2,f.snd==="crunch"?22:12,cs);
+  if(f.t==="cone"||f.t==="fruit")burst(r.left+r.width/2,r.top+30,3,["#ff7eb6"],"heart");
+  shake(f.snd==="crunch"?5:2);setFace("eat");
+  renderPlate();
+  if(last)finish(f,id);
+  else setTimeout(()=>{if(!busy)setFace("")},450);
+}
+function finish(f,id){
+  busy=1;
+  const now=Date.now();combo=(now-lastEat<10000)?combo+1:1;lastEat=now;
+  const mult=1+Math.min(combo-1,20)*.15;
+  const coins=Math.round((10+f.price/12)*mult),xp=Math.round(f.xp*mult);
+  S.coins+=coins;S.eaten++;S.best=Math.max(S.best,combo);S.hist[f.n]=(S.hist[f.n]||0)+1;
+  S.q.eat++;S.q.combo=Math.max(S.q.combo,combo);S.q.earn+=coins;
+  addXP(xp);
+  const label={3:"YUMMY COMBO!",5:"MEGA COMBO!",10:"SUPER MUKBANG!",20:"FOOD MASTER!"}[combo];
+  const cb=$("#combo");cb.textContent=label||`x${combo}  +${coins} xu`;cb.classList.remove("go");void cb.offsetWidth;cb.classList.add("go");
+  if(label){burst(innerWidth/2,innerHeight/3,60,["#ffc94d","#ff7eb6","#7fe0c3","#a68bff"],"star");SFX.ding()}
+  setTimeout(()=>{setFace("happy");burst(innerWidth/2,innerHeight*.35,10,["#ff7eb6"],"heart")},300);
+  achieve();hud();save();
+  setTimeout(()=>{bites=0;busy=0;renderPlate();setFace("")},900);
+}
+const ACH=[["First Bite","Ăn món đầu tiên",()=>S.eaten>=1],["Food Lover","Ăn 25 món",()=>S.eaten>=25],["Combo Beast","Combo 10",()=>S.best>=10],["Sweet Tooth","Sở hữu 20 món",()=>S.owned.length>=20],["Mukbang Legend","Ăn 200 món",()=>S.eaten>=200]];
+function achieve(){ACH.forEach(a=>{if(!S.ach.includes(a[0])&&a[2]()){S.ach.push(a[0]);S.gems+=3;setTimeout(()=>toast(`Thành tựu: ${a[0]}  +3 gem`),600)}})}
+
+/* ============ PANELS ============ */
+function open(title,html){$("#pt").textContent=title;$("#pb").innerHTML=html;$("#panel").hidden=false}
+const close=()=>{$("#panel").hidden=true};
+$("#px").onclick=close;$("#panel").onclick=e=>{if(e.target.id==="panel")close()};
+
+function pShop(){
+  const locked=FOODS.map((f,i)=>i).filter(i=>!S.owned.includes(i));
+  let h=`<div class="row"><div><b>Hộp Món Ăn</b><br><small>Mở ngẫu nhiên 1 món chưa có (100 xu)</small></div><button class="btn g" id="box">Mở hộp</button></div>`;
+  h+=`<div class="grid" style="margin-top:12px">`+locked.map(i=>{const f=FOODS[i];return `<div class="card">${foodSVG(i)}${f.n}<div class="rar">${f.r}</div><button class="btn" data-buy="${i}" ${S.coins<f.price?"disabled":""}>${f.price} xu</button></div>`}).join("")+`</div>`;
+  if(!locked.length)h+="<p>Bạn đã sở hữu tất cả món ăn!</p>";
+  open("Cửa hàng",h);
+  $("#box").onclick=()=>{
+    if(S.coins<100||!locked.length){toast("Không đủ xu");return}
+    S.coins-=100;const i=locked[Math.random()*locked.length|0];S.owned.push(i);SFX.ding();
+    open("Hộp mở ra!",`<div style="text-align:center"><div style="width:180px;margin:auto;animation:hop .6s">${foodSVG(i)}</div><h3>${FOODS[i].n}</h3><div class="rar">${FOODS[i].r}</div><button class="btn" id="ok">Tuyệt!</button></div>`);
+    burst(innerWidth/2,innerHeight/2,50,["#ffc94d","#ff7eb6","#7fe0c3"],"star");
+    $("#ok").onclick=()=>{close();hud();renderTray();save()};hud();save();
+  };
+  $("#pb").querySelectorAll("[data-buy]").forEach(b=>b.onclick=()=>{
+    const i=+b.dataset.buy,f=FOODS[i];if(S.coins<f.price)return;
+    S.coins-=f.price;S.owned.push(i);SFX.ding();toast(`Đã mở khóa ${f.n}!`);
+    burst(innerWidth/2,innerHeight/2,40,["#ffc94d","#ff7eb6","#fff"],"star");achieve();hud();renderTray();save();pShop();
+  });
+}
+function pCol(){
+  const pct=Math.round(S.owned.length/FOODS.length*100);
+  open(`Bộ sưu tập ${pct}%`,`<div class="grid">`+FOODS.map((f,i)=>{const o=S.owned.includes(i);return `<div class="card ${o?"":"lock"}">${foodSVG(i)}${o?f.n:"???"}<div class="rar">${o?f.r+" - "+f.cal+" cal":""}</div></div>`}).join("")+`</div>`);
+}
+function pQuest(){
+  const Q=[["Ăn 5 món","eat",5,60],["Đạt combo 5","combo",5,80],["Kiếm 300 xu","earn",300,100]];
+  open("Nhiệm vụ hằng ngày",Q.map((q,i)=>{const v=Math.min(S.q[q[1]],q[2]),ok=v>=q[2],cl=S.q.claim.includes(i);
+    return `<div class="row"><div><b>${q[0]}</b><br><small>${v}/${q[2]}</small></div><button class="btn g" data-q="${i}" ${(!ok||cl)?"disabled":""}>${cl?"Đã nhận":"+"+q[3]+" xu"}</button></div>`}).join("")
+    +`<h3>Thành tựu</h3>`+ACH.map(a=>`<div class="row"><span>${S.ach.includes(a[0])?"[x]":"[ ]"} <b>${a[0]}</b> - ${a[1]}</span></div>`).join(""));
+  $("#pb").querySelectorAll("[data-q]").forEach(b=>b.onclick=()=>{const i=+b.dataset.q;S.q.claim.push(i);S.coins+=Q[i][3];SFX.ding();hud();save();pQuest()});
+}
+function pStats(){
+  const top=Object.entries(S.hist).sort((a,b)=>b[1]-a[1])[0];
+  open("Thống kê",[["Tổng món đã ăn",S.eaten],["Tổng miếng cắn",S.bites],["Combo cao nhất",S.best],["Món yêu thích",top?top[0]+" ("+top[1]+")":"chưa có"],["Món đã sở hữu",S.owned.length+"/"+FOODS.length]].map(r=>`<div class="row"><span>${r[0]}</span><b>${r[1]}</b></div>`).join(""));
+}
+function pSet(){
+  const tg=(k,l)=>`<div class="row"><span>${l}</span><button class="btn ${S[k]?"":"g"}" data-t="${k}">${S[k]?"Bật":"Tắt"}</button></div>`;
+  open("Cài đặt",`<div class="row" style="display:block"><span>Âm lượng hiệu ứng</span><input type="range" id="sv" min="0" max="1" step=".05" value="${S.sfx}"><button class="btn g" id="st">Thử âm thanh</button></div>`
+    +tg("mute","Tắt tiếng")+tg("dark","Chế độ tối")+tg("reduce","Giảm hiệu ứng / nhấp nháy")+tg("big","Chữ lớn")+tg("contrast","Tương phản cao")+tg("vib","Rung")
+    +`<div class="row"><span>Xóa toàn bộ tiến trình</span><button class="btn" id="rs">Xóa</button></div>`);
+  $("#sv").oninput=e=>{S.sfx=+e.target.value;save()};
+  $("#st").onclick=()=>{ac();["crunch","soft","slurp","drink"].forEach((k,i)=>setTimeout(()=>SFX[k](),i*700))};
+  $("#pb").querySelectorAll("[data-t]").forEach(b=>b.onclick=()=>{const k=b.dataset.t;S[k]=S[k]?0:1;apply();save();pSet()});
+  $("#rs").onclick=()=>{if(confirm("Xóa toàn bộ dữ liệu?")){localStorage.removeItem(KEY);location.reload()}};
+}
+const PANELS={shop:pShop,col:pCol,quest:pQuest,stats:pStats,set:pSet};
+document.addEventListener("click",e=>{const b=e.target.closest("[data-p]");if(b){ac();SFX.soft();PANELS[b.dataset.p]()}});
+
+/* ============ ASMR + CHỤP ẢNH + KHỞI ĐỘNG ============ */
+$("#bAsmr").onclick=()=>{ac();document.body.classList.toggle("asmr")};
+document.querySelectorAll("[data-a]").forEach(b=>b.onclick=()=>{ac();let k=b.dataset.a;if(k==="rand")k=["crunch","soft","slurp","drink"][Math.random()*4|0];SFX[k]();setFace("eat");setTimeout(()=>setFace(""),400)});
+$("#bShot").onclick=()=>{
+  document.body.classList.add("asmr");
+  toast("Chế độ chụp: hãy chụp màn hình rồi bấm ASMR để thoát");
+  setTimeout(()=>{},0);
+};
+$("#eatbtn").onclick=bite;$("#plate").onclick=bite;
+$("#mPlay").onclick=()=>{ac();$("#menu").hidden=true;if(!S.seen){S.seen=1;S.gems+=5;save();hud();open("Chào mừng bạn!",`<p><b>1.</b> Chọn món ở khay bên dưới.</p><p><b>2.</b> Chạm vào món hoặc nút ĂN! để cắn. 6 miếng là hết một món.</p><p><b>3.</b> Ăn liên tục trong 10 giây để tăng combo, nhận nhiều xu và XP hơn.</p><p><b>4.</b> Dùng xu để mở món mới ở Shop hoặc mở Hộp Món Ăn.</p><button class="btn" id="go">Bắt đầu ăn thôi!</button>`);$("#go").onclick=close}};
+
+$("#ldfood").innerHTML=(()=>{const f=FOODS[0];return SHAPES[f.t](col(f.h,75,68),col((f.h+40)%360,70,52),col((f.h+180)%360,65,82))})();
+apply();hud();renderPlate();renderTray();achieve();save();
+setTimeout(()=>{const l=$("#load");l.style.opacity=0;setTimeout(()=>{l.remove();$("#menu").hidden=false},500)},1900);
+addEventListener("beforeunload",save);
+</script>
+</body>
+</html>
